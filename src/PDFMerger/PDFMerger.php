@@ -21,11 +21,11 @@
  * such as form fields, links or page annotations (anything not a part of the page content stream).
  *
  */
+
 namespace Clegginabox\PDFMerger;
 
 use Exception;
-use fpdi\FPDI;
-use fpdf\FPDF;
+use setasign\Fpdi\Fpdi as FPDI;
 
 class PDFMerger
 {
@@ -45,7 +45,7 @@ class PDFMerger
                 $pages = $this->_rewritepages($pages);
             }
 
-            $this->_files[] = array($filepath, $pages, $orientation);
+            $this->_files[] = [$filepath, $pages, $orientation];
         } else {
             throw new Exception("Could not locate PDF on '$filepath'");
         }
@@ -63,26 +63,26 @@ class PDFMerger
     public function merge($outputmode = 'browser', $outputpath = 'newfile.pdf', $orientation = 'P')
     {
         if (!isset($this->_files) || !is_array($this->_files)) {
-            throw new Exception("No PDFs to merge.");
+            throw new Exception('No PDFs to merge.');
         }
 
         $fpdi = new FPDI;
 
         // merger operations
         foreach ($this->_files as $file) {
-            $filename  = $file[0];
-            $filepages = $file[1];
+            $filename        = $file[0];
+            $filepages       = $file[1];
             $fileorientation = (!is_null($file[2])) ? $file[2] : $orientation;
 
             $count = $fpdi->setSourceFile($filename);
 
             //add the pages
             if ($filepages == 'all') {
-                for ($i=1; $i<=$count; $i++) {
+                for ($i=1; $i <= $count; $i++) {
                     $template   = $fpdi->importPage($i);
                     $size       = $fpdi->getTemplateSize($template);
 
-                    $fpdi->AddPage($fileorientation, array($size['w'], $size['h']));
+                    $fpdi->AddPage($fileorientation, [$size['width'], $size['height']]);
                     $fpdi->useTemplate($template);
                 }
             } else {
@@ -92,7 +92,7 @@ class PDFMerger
                     }
                     $size = $fpdi->getTemplateSize($template);
 
-                    $fpdi->AddPage($fileorientation, array($size['w'], $size['h']));
+                    $fpdi->AddPage($fileorientation, [$size['width'], $size['height']]);
                     $fpdi->useTemplate($template);
                 }
             }
@@ -111,8 +111,6 @@ class PDFMerger
                 return false;
             }
         }
-
-
     }
 
     /**
@@ -122,8 +120,7 @@ class PDFMerger
      */
     private function _switchmode($mode)
     {
-        switch(strtolower($mode))
-        {
+        switch (strtolower($mode)) {
             case 'download':
                 return 'D';
                 break;
@@ -150,7 +147,7 @@ class PDFMerger
     private function _rewritepages($pages)
     {
         $pages = str_replace(' ', '', $pages);
-        $part = explode(',', $pages);
+        $part  = explode(',', $pages);
 
         //parse hyphens
         foreach ($part as $i) {
